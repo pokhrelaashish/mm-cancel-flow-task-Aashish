@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 
 import { DM_Sans } from 'next/font/google';
 
-const lora = DM_Sans({ 
+const dm_sans = DM_Sans({ 
   subsets: ['latin'],
   weight: ['400', '700'] 
 });
@@ -51,18 +51,20 @@ export default function BeforeCancelPage() {
             
             {/* Action Buttons */}
             <div className="space-y-3 mt-auto">
-              <Link 
-                href="/cancel/success?reason=success"
+              <button
+                onClick={() => router.push('/cancellation/cancel/success')}
                 className="block w-full text-center p-3 text-gray-700 font-bold bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                Yes, I've found a job
-              </Link>
-              <Link 
-                href="/cancel/offer?reason=looking"
+                
+                <span className="text-gray-700 font-bold">Yes, I've found a job</span>
+              </button>
+              <button
+                onClick={() => router.push('/cancellation/nojob/')}
                 className="block w-full text-center p-3 text-gray-700 font-bold bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                Not yet - I'm still looking
-              </Link>
+                
+                <span className="text-gray-700 font-bold">Not yet - I'm still looking</span>
+              </button>
             </div>
           </div>
           
