@@ -4,6 +4,8 @@ import Link from 'next/link';
 
 import { useRouter } from 'next/navigation';
 
+import { useState } from 'react';
+
 import { DM_Sans } from 'next/font/google';
 
 const dm_sans = DM_Sans({ 
@@ -11,8 +13,63 @@ const dm_sans = DM_Sans({
   weight: ['400', '700'] 
 });
 
+const mockUser = {
+  email: 'user@example.com',
+  id: '1'
+};
+
+const mockSubscriptionData = {
+  status: 'active',
+  isTrialSubscription: false,
+  cancelAtPeriodEnd: false,
+  currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+  monthlyPrice: 25,
+  isUCStudent: false,
+  hasManagedAccess: false,
+  managedOrganization: null,
+  downsellAccepted: false
+};
+
 export default function BeforeCancelPage() {
   const router = useRouter();
+
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const handleCancellationClick = async () => {
+    setIsCancelling(true);
+    try {
+      const response = await fetch('/api/user/ab-testing-variant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userId: mockUser.id,
+          subscriptionId: mockSubscriptionData.id
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('API request failed');
+      }
+      
+      const { variant } = await response.json();
+
+      if (variant === 'B') {
+        // Variant B: Go to the downsell offer page
+        // Note: The downsell page is at /cancellation/downsell
+        router.push(`/cancellation/downsell?price=${mockSubscriptionData.monthlyPrice}`);
+      } else {
+        // Variant A: Go directly to the standard cancellation flow
+        router.push('/cancellation/cancel');
+      }
+
+    } catch (err) {
+      console.error('Failed to determine A/B test variant:', err);
+      // Default to the standard flow in case of an error
+      router.push('/cancellation/cancel');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -59,7 +116,8 @@ export default function BeforeCancelPage() {
                 <span className="text-gray-700 font-bold">Yes, I've found a job</span>
               </button>
               <button
-                onClick={() => router.push('/cancellation/nojob/')}
+                onClick={handleCancellationClick}
+                disabled={isCancelling}
                 className="block w-full text-center p-3 text-gray-700 font-bold bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 
