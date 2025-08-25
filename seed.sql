@@ -29,8 +29,31 @@ CREATE TABLE IF NOT EXISTS cancellations (
   downsell_variant TEXT NOT NULL CHECK (downsell_variant IN ('A', 'B')),
   reason TEXT,
   accepted_downsell BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+  downsell_action VARCHAR(10) CHECK (downsell_action IN ('accepted', 'declined')),
+  downsell_original_price DECIMAL(10,2),
+  downsell_discounted_price DECIMAL(10,2),
+  downsell_discount_amount DECIMAL(10,2),
+  downsell_from_path VARCHAR(50), -- 'nojob', 'cancel', etc.
+  downsell_action_at TIMESTAMPTZ,
+
+  found_job BOOLEAN,
+  found_with_migrate_mate BOOLEAN,
+  roles_applied VARCHAR(10),
+  companies_emailed VARCHAR(10),
+  interviews VARCHAR(10),
+  feedback TEXT,
+  cancellation_reason VARCHAR(100),
+  follow_up_answer TEXT,
+  needs_visa_help BOOLEAN,
+  visa_info TEXT,
 );
+
+CREATE INDEX IF NOT EXISTS idx_cancellations_user_id ON cancellations(user_id);
+CREATE INDEX IF NOT EXISTS idx_cancellations_variant ON cancellations(downsell_variant);
+CREATE INDEX IF NOT EXISTS idx_cancellations_action ON cancellations(downsell_action);
 
 -- Enable Row Level Security
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;

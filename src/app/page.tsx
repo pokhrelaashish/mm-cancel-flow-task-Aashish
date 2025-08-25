@@ -31,6 +31,44 @@ export default function ProfilePage() {
   // New state for settings toggle
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
 
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const handleCancellationClick = async () => {
+    setIsCancelling(true);
+    try {
+      const response = await fetch('/api/user/ab-testing-variant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userId: mockUser.id,
+          subscriptionId: mockSubscriptionData.id
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('API request failed');
+      }
+      
+      const { variant } = await response.json();
+
+      if (variant === 'B') {
+        // Variant B: Go to the downsell offer page
+        // Note: The downsell page is at /cancellation/downsell
+        router.push(`/cancellation/downsell?price=${mockSubscriptionData.monthlyPrice}`);
+      } else {
+        // Variant A: Go directly to the standard cancellation flow
+        router.push('/cancellation/cancel');
+      }
+
+    } catch (err) {
+      console.error('Failed to determine A/B test variant:', err);
+      // Default to the standard flow in case of an error
+      router.push('/cancellation/cancel');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   const handleSignOut = async () => {
     setIsSigningOut(true);
     // Simulate sign out delay
@@ -251,7 +289,8 @@ export default function ProfilePage() {
                       <span className="text-sm font-medium">View billing history</span>
                     </button>
                     <button
-                      onClick={() => router.push('/cancellation/cancel')}
+                      onClick={handleCancellationClick}
+                      disabled={isCancelling}
                       className="inline-flex items-center justify-center w-full px-4 py-3 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 hover:border-red-300 transition-all duration-200 shadow-sm group"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

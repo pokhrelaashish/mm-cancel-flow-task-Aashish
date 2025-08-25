@@ -1,129 +1,87 @@
-# Migrate Mate - Subscription Cancellation Flow Challenge
+# Cancellation Flow with Deterministic A/B Testing
 
-## Overview
-
-Convert an existing Figma design into a fully-functional subscription-cancellation flow for Migrate Mate. This challenge tests your ability to implement pixel-perfect UI, handle complex business logic, and maintain security best practices.
-
-## Objective
-
-Implement the Figma-designed cancellation journey exactly on mobile + desktop, persist outcomes securely, and instrument the A/B downsell logic.
-
-## What's Provided
-
-This repository contains:
-- ✅ Next.js + TypeScript + Tailwind scaffold
-- ✅ `seed.sql` with users table (25/29 USD plans) and empty cancellations table
-- ✅ Local Supabase configuration for development
-- ✅ Basic Supabase client setup in `src/lib/supabase.ts`
-
-## Tech Stack (Preferred)
-
-- **Next.js** with App Router
-- **React** with TypeScript
-- **Tailwind CSS** for styling
-- **Supabase** (Postgres + Row-Level Security)
-
-> **Alternative stacks allowed** if your solution:
-> 1. Runs with `npm install && npm run dev`
-> 2. Persists to a Postgres-compatible database
-> 3. Enforces table-level security
-
-## Must-Have Features
-
-### 1. Progressive Flow (Figma Design)
-- Implement the exact cancellation journey from provided Figma
-- Ensure pixel-perfect fidelity on both mobile and desktop
-- Handle all user interactions and state transitions
-
-### 2. Deterministic A/B Testing (50/50 Split)
-- **On first entry**: Assign variant via cryptographically secure RNG
-- **Persist** variant to `cancellations.downsell_variant` field
-- **Reuse** variant on repeat visits (never re-randomize)
-
-**Variant A**: No downsell screen
-**Variant B**: Show "$10 off" offer
-- Price $25 → $15, Price $29 → $19
-- **Accept** → Log action, take user back to profile page (NO ACTUAL PAYMENT PROCESSING REQUIRED)
-- **Decline** → Continue to reason selection in flow
-
-### 3. Data Persistence
-- Mark subscription as `pending_cancellation` in database
-- Create cancellation record with:
-  - `user_id`
-  - `downsell_variant` (A or B)
-  - `reason` (from user selection)
-  - `accepted_downsell` (boolean)
-  - `created_at` (timestamp)
-
-### 4. Security Requirements
-- **Row-Level Security (RLS)** policies
-- **Input validation** on all user inputs
-- **CSRF/XSS protection**
-- Secure handling of sensitive data
-
-### 5. Reproducible Setup
-- `npm run db:setup` creates schema and seed data (local development)
-- Clear documentation for environment setup
-
-## Out of Scope
-
-- **Payment processing** - Stub with comments only
-- **User authentication** - Use mock user data
-- **Email notifications** - Not required
-- **Analytics tracking** - Focus on core functionality
-
-## Getting Started
-
-1. **Clone this repository** `git clone [repo]`
-2. **Install dependencies**: `npm install`
-3. **Set up local database**: `npm run db:setup`
-4. **Start development**: `npm run dev`
-
-## Database Schema
-
-The `seed.sql` file provides a **starting point** with:
-- `users` table with sample users
-- `subscriptions` table with $25 and $29 plans
-- `cancellations` table (minimal structure - **you'll need to expand this**)
-- Basic RLS policies (enhance as needed)
-
-### Important: Schema Design Required
-
-The current `cancellations` table is intentionally minimal. You'll need to:
-- **Analyze the cancellation flow requirements** from the Figma design
-- **Design appropriate table structure(s)** to capture all necessary data
-- **Consider data validation, constraints, and relationships**
-- **Ensure the schema supports the A/B testing requirements**
-
-## Evaluation Criteria
-
-- **Functionality (40%)**: Feature completeness and correctness
-- **Code Quality (25%)**: Clean, maintainable, well-structured code
-- **Pixel/UX Fidelity (15%)**: Accuracy to Figma design
-- **Security (10%)**: Proper RLS, validation, and protection
-- **Documentation (10%)**: Clear README and code comments
-
-## Deliverables
-
-1. **Working implementation** in this repository
-2. **NEW One-page README.md (replace this)** (≤600 words) explaining:
-   - Architecture decisions
-   - Security implementation
-   - A/B testing approach
-3. **Clean commit history** with meaningful messages
-
-## Timeline
-
-Submit your solution within **72 hours** of receiving this repository.
-
-## AI Tooling
-
-Using Cursor, ChatGPT, Copilot, etc. is **encouraged**. Use whatever accelerates your development—just ensure you understand the code and it runs correctly.
-
-## Questions?
-
-Review the challenge requirements carefully. If you have questions about specific implementation details, make reasonable assumptions and document them in your README.
+This project implements a subscription cancellation flow built with **Next.js (App Router)**. It includes structured UI steps, mock backend logic, and a deterministic A/B testing framework for evaluating user experience with or without downsell offers.
 
 ---
 
-**Good luck!** We're excited to see your implementation.
+## Architecture Decisions
+
+- **Framework:**  
+  Built on **Next.js (15.3.5) App Router** with React Server Components and Client Components where interactivity is required (e.g., form handling, navigation, variant assignment).
+
+- **Page Flow:**  
+  The cancellation journey is split into three primary steps:
+  1. **Reason/Feedback Collection** – gathers structured input from the user.  
+  2. **Immigration/Final Step** – captures contextual details (e.g., visa or employment).  
+  3. **Confirmation** – final success state.  
+
+  An optional **Downsell Offer** step is inserted conditionally based on A/B test assignment.
+
+- **Routing:**  
+  Each step is represented by its own file in `app/cancellation/...`. Navigation between steps uses `next/navigation`’s `useRouter`.
+
+- **Backend Mocking:**  
+  For local development, API routes under `app/api/...` use simple **in-memory mocks** instead of a real database. This ensures the app runs without external dependencies (e.g., Supabase). The mocked API contract mirrors what a production database call would look like, making future integration straightforward.
+
+---
+
+## Security Implementation
+
+- **Client/Server Separation:**  
+  Sensitive logic (e.g., assigning A/B variants to users) is handled inside **API routes** rather than directly in the client. This ensures the client never directly controls variant assignment.
+
+- **Authentication Stub:**  
+  A helper `getCurrentUser()` currently returns a mock user ID. In production, this would be replaced with an actual authentication session (e.g., JWT, NextAuth, or Supabase Auth). This prevents malicious users from tampering with assignments.
+
+- **Deterministic Assignment:**  
+  Variant assignment is tied to a unique `user.id`, ensuring a consistent experience across sessions. A secure RNG (`crypto.getRandomValues`) is used when no prior assignment exists.
+
+- **Error Handling:**  
+  API routes catch all exceptions and default to **Variant A** if anything fails. This guarantees a graceful fallback path.
+
+- **Data Privacy:**  
+  Since no real PII or billing is processed in the demo, no sensitive data is exposed. In a real deployment, API calls would enforce:
+  - Parameter validation
+  - Role-based authorization
+  - Audit logging
+
+---
+
+## A/B Testing Approach
+
+- **Goal:**  
+  Measure user response to a **downsell offer** during cancellation:
+  - **Variant A** – no downsell screen, continue directly to feedback/confirmation.  
+  - **Variant B** – display a special offer (e.g., “50% off until you find a job” or “$10 discount”). Users can accept (stay subscribed at reduced price) or decline (proceed with cancellation).  
+
+- **Deterministic Assignment:**  
+  On first interaction, the API assigns a variant using a **cryptographically secure random generator**.  
+  - If a record for the user already exists, the stored variant is reused (ensuring consistency).  
+  - Otherwise, a new variant is generated, stored (mock in memory for local dev), and returned.
+
+- **Persistence Options:**  
+  - **Local Development**: In-memory store ensures API stability without external dependencies.  
+  - **Production**: Persist to a real database (Supabase/Postgres/Prisma) by replacing the mock `variantStore`.  
+
+- **Analytics & Logging:**  
+  - Accept/Decline actions are logged to the console in the mock version.  
+  - In production, these would be persisted to an analytics table for experiment evaluation.  
+
+- **Fail-Safe Defaults:**  
+  If variant determination fails, the system defaults to **Variant A**, preserving the core cancellation flow without interruption.
+
+---
+
+## Future Improvements
+
+- Integrate real authentication and user sessions.  
+- Replace the in-memory store with a durable DB.  
+- Add experiment analytics dashboards (conversion, retention).  
+- Expand test conditions (multi-variant or percentage splits beyond 50/50).  
+
+---
+
+## Summary
+
+This project demonstrates how to implement a **robust, secure, and testable cancellation flow** with deterministic A/B testing. The architecture favors clarity and modularity, the security model enforces server-side control of sensitive logic, and the testing framework ensures consistent variant assignments with fail-safe fallbacks.
+
