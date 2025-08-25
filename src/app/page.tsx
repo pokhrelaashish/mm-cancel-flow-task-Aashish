@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 // Mock user data for UI display
 const mockUser = {
@@ -21,155 +23,13 @@ const mockSubscriptionData = {
   downsellAccepted: false
 };
 
-const CancellationSuccessModal = ({ onClose }: { onClose: () => void }) => {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full m-4">
-        {/* Header with Progress */}
-        <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm font-medium text-gray-500">Subscription Cancelled</span>
-            <div className="flex items-center space-x-1">
-              <div className="w-6 h-1.5 rounded-full bg-green-500"></div>
-              <div className="w-6 h-1.5 rounded-full bg-green-500"></div>
-              <div className="w-6 h-1.5 rounded-full bg-green-500"></div>
-            </div>
-            <span className="text-sm font-semibold text-gray-800">Completed</span>
-          </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Content Body */}
-        <div className="flex flex-col md:flex-row">
-          <div className="p-8 flex-1">
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">
-              All done, your cancellation's been processed.
-            </h2>
-            <p className="text-gray-600 mb-6">
-              We're stoked to hear you've landed a job and sorted your visa. Big congrats from the team. 🙌
-            </p>
-            <button
-              onClick={onClose}
-              className="w-full bg-[#8952fc] text-white font-semibold py-3 px-6 rounded-lg hover:bg-[#7b40fc] transition-colors"
-            >
-              Finish
-            </button>
-          </div>
-          <div className="flex-shrink-0 p-4 md:p-8">
-            <img 
-              src="/empire-state-compressed.jpg"
-              alt="New York City skyline" 
-              className="w-full h-48 md:w-56 md:h-auto object-cover rounded-lg"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const CancellationSurveyModal = ({
-  onClose,
-  onConfirm,
-  isCancelling
-}: {
-  onClose: () => void;
-  onConfirm: (reasons: { gotJob: boolean; sortedVisa: boolean }) => void;
-  isCancelling: boolean;
-}) => {
-  const [reasons, setReasons] = useState({
-    gotJob: false,
-    sortedVisa: false,
-  });
-
-  const handleReasonChange = (reason: 'gotJob' | 'sortedVisa') => {
-    setReasons(prev => ({ ...prev, [reason]: !prev[reason] }));
-  };
-
-  const canProceed = reasons.gotJob || reasons.sortedVisa;
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="bg-white rounded-lg shadow-xl p-6 sm:p-8 max-w-md w-full mx-4">
-        <h2 id="modal-title" className="text-xl font-bold text-gray-900">
-          We're sorry to see you go!
-        </h2>
-        <p className="mt-2 text-sm text-gray-600">
-          To help us improve, please let us know why you're leaving. Did you achieve your goal?
-        </p>
-        
-        {/* Survey Questions */}
-        <div className="mt-6 space-y-4">
-          <label
-            htmlFor="gotJob"
-            className="flex items-center p-4 border rounded-lg cursor-pointer transition-colors hover:bg-gray-50"
-          >
-            <input
-              id="gotJob"
-              name="reason"
-              type="checkbox"
-              checked={reasons.gotJob}
-              onChange={() => handleReasonChange('gotJob')}
-              className="h-5 w-5 rounded border-gray-300 text-[#8952fc] focus:ring-[#7b40fc]"
-            />
-            <span className="ml-3 text-sm font-medium text-gray-800">I got a job</span>
-          </label>
-          <label
-            htmlFor="sortedVisa"
-            className="flex items-center p-4 border rounded-lg cursor-pointer transition-colors hover:bg-gray-50"
-          >
-            <input
-              id="sortedVisa"
-              name="reason"
-              type="checkbox"
-              checked={reasons.sortedVisa}
-              onChange={() => handleReasonChange('sortedVisa')}
-              className="h-5 w-5 rounded border-gray-300 text-[#8952fc] focus:ring-[#7b40fc]"
-            />
-            <span className="ml-3 text-sm font-medium text-gray-800">I sorted out my visa</span>
-          </label>
-        </div>
-
-        <div className="mt-6 flex flex-col sm:flex-row-reverse sm:space-x-3 sm:space-x-reverse">
-          <button
-            onClick={() => onConfirm(reasons)}
-            disabled={!canProceed || isCancelling}
-            className="inline-flex w-full justify-center items-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed sm:w-auto"
-          >
-            {isCancelling ? 'Cancelling...' : 'Confirm Cancellation'}
-          </button>
-          <button
-            onClick={onClose}
-            disabled={isCancelling}
-            className="mt-3 w-full inline-flex justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 disabled:opacity-50 sm:mt-0 sm:w-auto"
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 export default function ProfilePage() {
+  const router = useRouter();
   const [loading] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   
   // New state for settings toggle
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
-
-  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [isCancelling, setIsCancelling] = useState(false);
-
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
@@ -182,22 +42,6 @@ export default function ProfilePage() {
 
   const handleClose = () => {
     console.log('Navigate to jobs');
-  };
-
-  const handleCancelSubscription = async (reasons: { gotJob: boolean; sortedVisa: boolean }) => {
-    setIsCancelling(true);
-    console.log('Starting subscription cancellation with reasons:', reasons);
-    setTimeout(() => {
-      console.log('Subscription successfully cancelled');
-      setIsCancelling(false);
-      setIsCancelModalOpen(false);
-      setShowSuccessModal(true);
-    }, 1500);
-  };
-
-  const handleFinishCancellation = () => {
-    setShowSuccessModal(false);
-    console.log("Cancellation flow finished.");
   };
 
   if (loading) {
@@ -396,7 +240,9 @@ export default function ProfilePage() {
                       <span className="text-sm font-medium">Update payment method</span>
                     </button>
                     <button
-                      onClick={() => setIsCancelModalOpen(true)}
+                      onClick={() => {
+                        console.log('Invoice history clicked');
+                      }}
                       className="inline-flex items-center justify-center w-full px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -405,7 +251,7 @@ export default function ProfilePage() {
                       <span className="text-sm font-medium">View billing history</span>
                     </button>
                     <button
-                      onClick={() => setIsCancelModalOpen(true)}
+                      onClick={() => router.push('/cancellation/cancel')}
                       className="inline-flex items-center justify-center w-full px-4 py-3 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 hover:border-red-300 transition-all duration-200 shadow-sm group"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -420,16 +266,6 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-
-      {isCancelModalOpen && (
-        <CancellationSurveyModal
-          isCancelling={isCancelling}
-          onClose={() => setIsCancelModalOpen(false)}
-          onConfirm={handleCancelSubscription}
-        />
-      )}
-
-      {showSuccessModal && <CancellationSuccessModal onClose={handleFinishCancellation} />}
     </div>
   );
 }
