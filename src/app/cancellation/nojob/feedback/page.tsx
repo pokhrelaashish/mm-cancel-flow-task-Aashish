@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DM_Sans } from 'next/font/google';
+import { getABTestConfig } from '@/lib/ab-testing';
 
 const dm_sans = DM_Sans({ 
   subsets: ['latin'],
@@ -18,6 +19,9 @@ export default function NoJobFeedbackPage() {
     companiesEmailed: null,
     interviews: null,
   });
+
+  // Get the A/B test configuration for the downsell offer
+  const downsellOffer = getABTestConfig('B');
 
   // Check if all questions have been answered to enable the continue button
   const allQuestionsAnswered = Object.values(answers).every(answer => answer !== null);
@@ -132,12 +136,12 @@ export default function NoJobFeedbackPage() {
 
             <div className="mt-auto space-y-3">
               <button
-                onClick={() => router.push('/cancellation/nojob/offer-accepted')}
+                onClick={() => router.push('/cancellation/downsell')}
                 className="w-full py-3 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center"
               >
-                <span>Get 50% off | </span>
-                <span className="font-normal mx-1">$12.50</span>
-                <span className="font-normal line-through text-green-200">$25</span>
+                <span>Get ${downsellOffer.discountAmount} off | </span>
+                <span className="font-normal mx-1">${downsellOffer.discountedPrice}</span>
+                <span className="font-normal line-through text-green-200">${downsellOffer.originalPrice}</span>
               </button>
 
               <button

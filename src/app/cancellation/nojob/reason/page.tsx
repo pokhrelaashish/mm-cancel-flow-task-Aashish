@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DM_Sans } from 'next/font/google';
+import { getABTestConfig } from '@/lib/ab-testing';
 
 const dm_sans = DM_Sans({ 
   subsets: ['latin'],
@@ -17,6 +18,9 @@ export default function FinalReasonPage() {
   // State to show a validation error if the user tries to proceed without a selection
   const [showError, setShowError] = useState(false);
   const [followUpAnswer, setFollowUpAnswer] = useState('');
+
+  // Get the A/B test configuration for the downsell offer
+  const downsellOffer = getABTestConfig('B');
 
   const cancellationReasons = [
     {
@@ -178,12 +182,12 @@ export default function FinalReasonPage() {
 
             <div className="mt-auto space-y-3">
               <button
-                onClick={() => router.push('/cancellation/nojob/offer-accepted')}
+                onClick={() => router.push('/cancellation/downsell')}
                 className="w-full py-3 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center"
               >
-                <span>Get 50% off | </span>
-                <span className="font-normal mx-1">$12.50</span>
-                <span className="font-normal line-through text-green-200">$25</span>
+                <span>Get ${downsellOffer.discountAmount} off | </span>
+                <span className="font-normal mx-1">${downsellOffer.discountedPrice}</span>
+                <span className="font-normal line-through text-green-200">${downsellOffer.originalPrice}</span>
               </button>
               <button
                 onClick={handleComplete}
